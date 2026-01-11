@@ -117,8 +117,8 @@ def get_lat_lon(city_name, state_code="", country_code="", api_key=None):
     if country_code:
         location += f",{country_code}"
     
-    # Construct API URL with city information
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}"
+    # Construct API URL with city information (using Geocoding API)
+    url = f"http://api.openweathermap.org/geo/1.0/direct?q={location}&appid={api_key}"
     
     # Make API request
     response = requests.get(url)
@@ -126,13 +126,15 @@ def get_lat_lon(city_name, state_code="", country_code="", api_key=None):
     # Check if request was successful
     if response.status_code == 200:
         data = response.json()
-        # Extract coordinates from response
-        lat = data["coord"]["lat"]
-        lon = data["coord"]["lon"]
-        return lat, lon
-    else:
-        # Return None values if API call fails
-        return None, None
+        # Check if results were found
+        if data and len(data) > 0:
+            # Extract coordinates from first result
+            lat = data[0]["lat"]
+            lon = data[0]["lon"]
+            return lat, lon
+    
+    # Return None values if API call fails or no results found
+    return None, None
 
 def get_current_weather(lat, lon, api_key):
     """

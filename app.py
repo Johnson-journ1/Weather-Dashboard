@@ -267,6 +267,11 @@ def index():
         # Log the retrieved data (for debugging)
         print(weather_data)
         
+        # Check if weather data was successfully retrieved
+        if weather_data is None:
+            # Return form with error message if API call failed
+            return render_template("index.html", current_time=current_time, timezone_offset=0, error="Could not fetch weather data. Please check the city name and try again.")
+        
         # Render template with weather data and current time (adjusted to location timezone)
         return render_template("index.html", weather_data=weather_data, current_time=current_time, timezone_offset=weather_data.timezone_offset)
     
