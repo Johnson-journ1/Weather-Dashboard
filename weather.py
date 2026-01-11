@@ -72,7 +72,7 @@ class WeatherData:
 # API FUNCTIONS
 # ============================================================================
 
-def get_lat_lon(city_name, state_code, country_code, api_key):
+def get_lat_lon(city_name, state_code="", country_code="", api_key=None):
     """
     Convert city name to geographic coordinates (latitude, longitude).
     
@@ -84,9 +84,9 @@ def get_lat_lon(city_name, state_code, country_code, api_key):
     
     Args:
         city_name (str): Name of the city (e.g., "London")
-        state_code (str): ISO 3166-1 state code (e.g., "10" for England)
-        country_code (str): ISO 3166-1 country code (e.g., "GB" for UK)
-        api_key (str): OpenWeatherMap API key
+        state_code (str, optional): ISO 3166-1 state code (e.g., "10" for England). Defaults to "".
+        country_code (str, optional): ISO 3166-1 country code (e.g., "GB" for UK). Defaults to "".
+        api_key (str, optional): OpenWeatherMap API key. Defaults to None (uses env variable).
     
     Returns:
         tuple: (latitude, longitude) if successful, (None, None) if failed
@@ -96,8 +96,19 @@ def get_lat_lon(city_name, state_code, country_code, api_key):
         >>> print(lat, lon)
         51.5085 -0.1257
     """
+    # Use global api_key if not provided
+    if api_key is None:
+        api_key = globals()['api_key']
+    
+    # Build location string based on provided parameters
+    location = city_name
+    if state_code:
+        location += f",{state_code}"
+    if country_code:
+        location += f",{country_code}"
+    
     # Construct API URL with city information
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city_name},{state_code},{country_code}&appid={api_key}"
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={location}&appid={api_key}"
     
     # Make API request
     response = requests.get(url)
@@ -247,7 +258,7 @@ def get_forecast_data(lat, lon, api_key):
     else:
         return [], [], 0, []
 
-def main(city_name, state_name, country_code):
+def main(city_name, state_name="", country_code=""):
     """
     Orchestrate the complete weather data collection process.
     
@@ -255,12 +266,22 @@ def main(city_name, state_name, country_code):
     the results into a single WeatherData object.
     
     Args:
-        city_name (str): Name of the city to get weather for
-        state_name (str): State/province code (optional)
-        country_code (str): Country code (optional)
+        city_name (str): Name of the city to get weather for (required)
+        state_name (str, optional): State/province code. Defaults to "".
+        country_code (str, optional): Country code. Defaults to "".
     
     Returns:
         WeatherData: Complete weather information object
+        
+    Examples:
+        >>> # Just city name
+        >>> weather = main("London")
+        
+        >>> # City with country code
+        >>> weather = main("London", "", "GB")
+        
+        >>> # City, state, and country
+        >>> weather = main("London", "10", "GB")
     """
     # Step 1: Convert city name to coordinates
     lat, lon = get_lat_lon(city_name, state_name, country_code, api_key)
