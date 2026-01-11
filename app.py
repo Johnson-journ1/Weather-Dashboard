@@ -59,12 +59,13 @@ def strftime_filter(timestamp, format_string):
 
 
 @app.template_filter('format_time')
-def format_time_filter(timestamp=None):
+def format_time_filter(timestamp=None, timezone_offset=0):
     """
     Format current or provided timestamp as HH:MM with AM/PM.
     
     Args:
         timestamp (int, optional): Unix timestamp. If None, uses current time.
+        timezone_offset (int, optional): UTC offset in seconds for location time.
     
     Returns:
         str: Formatted time string (e.g., "2:30 PM")
@@ -72,17 +73,19 @@ def format_time_filter(timestamp=None):
     if timestamp is None:
         dt = datetime.now()
     else:
-        dt = datetime.fromtimestamp(timestamp)
+        # Use UTC-based calculation for accurate location time
+        dt = datetime.utcfromtimestamp(timestamp) + timedelta(seconds=timezone_offset)
     return dt.strftime('%I:%M %p')
 
 
 @app.template_filter('format_date_long')
-def format_date_long_filter(timestamp=None):
+def format_date_long_filter(timestamp=None, timezone_offset=0):
     """
     Format current or provided timestamp as full date.
     
     Args:
         timestamp (int, optional): Unix timestamp. If None, uses current time.
+        timezone_offset (int, optional): UTC offset in seconds for location time.
     
     Returns:
         str: Formatted date string (e.g., "Saturday, January 11, 2026")
@@ -90,7 +93,8 @@ def format_date_long_filter(timestamp=None):
     if timestamp is None:
         dt = datetime.now()
     else:
-        dt = datetime.fromtimestamp(timestamp)
+        # Use UTC-based calculation for accurate location time
+        dt = datetime.utcfromtimestamp(timestamp) + timedelta(seconds=timezone_offset)
     return dt.strftime('%A, %B %d, %Y')
 
 
@@ -263,11 +267,11 @@ def index():
         # Log the retrieved data (for debugging)
         print(weather_data)
         
-        # Render template with weather data and current time
-        return render_template("index.html", weather_data=weather_data, current_time=current_time)
+        # Render template with weather data and current time (adjusted to location timezone)
+        return render_template("index.html", weather_data=weather_data, current_time=current_time, timezone_offset=weather_data.timezone_offset)
     
     # GET request: show empty form with current time
-    return render_template("index.html", current_time=current_time)
+    return render_template("index.html", current_time=current_time, timezone_offset=0)
 
 # ============================================================================
 # APPLICATION ENTRY POINT

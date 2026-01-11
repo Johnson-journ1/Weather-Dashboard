@@ -318,14 +318,14 @@
         <div class="header-time text-center">
             <div class="current-time" id="currentTime">
                 {% if current_time %}
-                    {{ current_time | format_time }}
+                    {{ current_time | format_time(timezone_offset) }}
                 {% else %}
                     --:-- AM
                 {% endif %}
             </div>
             <div class="current-date">
                 {% if current_time %}
-                    {{ current_time | format_date_long }}
+                    {{ current_time | format_date_long(timezone_offset) }}
                 {% else %}
                     Loading date...
                 {% endif %}
