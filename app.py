@@ -10,7 +10,7 @@ Date: January 2026
 
 from flask import Flask, render_template, request
 from weather import main as get_weather_data
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Initialize Flask application
 app = Flask(__name__)
@@ -156,6 +156,43 @@ def sunrise_sunset_filter(timestamp):
         return "N/A"
     dt = datetime.fromtimestamp(timestamp)
     return dt.strftime('%I:%M %p')
+
+
+@app.template_filter('location_time')
+def location_time_filter(timestamp, timezone_offset=0):
+    """
+    Format timestamp as local time at the weather location.
+    
+    Args:
+        timestamp (int): Unix timestamp
+        timezone_offset (int): UTC offset in seconds (e.g., 3600 for UTC+1)
+    
+    Returns:
+        str: Formatted time in location's timezone (e.g., "6:45 AM")
+    """
+    if timestamp == 0:
+        return "N/A"
+    # Create datetime from timestamp and adjust by timezone offset
+    dt = datetime.utcfromtimestamp(timestamp) + timedelta(seconds=timezone_offset)
+    return dt.strftime('%I:%M %p')
+
+
+@app.template_filter('location_date_time')
+def location_date_time_filter(timestamp, timezone_offset=0):
+    """
+    Format timestamp as date and time at the weather location.
+    
+    Args:
+        timestamp (int): Unix timestamp
+        timezone_offset (int): UTC offset in seconds
+    
+    Returns:
+        str: Formatted date/time in location's timezone
+    """
+    if timestamp == 0:
+        return "N/A"
+    dt = datetime.utcfromtimestamp(timestamp) + timedelta(seconds=timezone_offset)
+    return dt.strftime('%A, %B %d, %Y at %I:%M %p')
 
 
 @app.template_filter('timezone_display')

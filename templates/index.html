@@ -431,25 +431,25 @@
             </div>
 
             <!-- ========== SUNRISE/SUNSET SECTION ========== -->
-            <!-- Shows sunrise and sunset times for the location -->
+            <!-- Shows sunrise and sunset times for the location (in local time) -->
             <div class="sunrise-sunset-container">
                 <div class="sunrise-sunset-row">
                     <!-- Sunrise -->
                     <div class="sunrise-sunset-item">
                         <div class="icon">🌅</div>
                         <div class="label">Sunrise</div>
-                        <div class="time">{{ weather_data.sunrise | sunrise_sunset }}</div>
+                        <div class="time">{{ weather_data.sunrise | location_time(weather_data.timezone_offset) }}</div>
                     </div>
                     <!-- Sunset -->
                     <div class="sunrise-sunset-item">
-                        <div class="icon">🌅</div>
+                        <div class="icon">�</div>
                         <div class="label">Sunset</div>
-                        <div class="time">{{ weather_data.sunset | sunrise_sunset }}</div>
+                        <div class="time">{{ weather_data.sunset | location_time(weather_data.timezone_offset) }}</div>
                     </div>
                     <!-- Timezone -->
                     <div class="sunrise-sunset-item">
                         <div class="icon">🌍</div>
-                        <div class="label">Location</div>
+                        <div class="label">Location Time</div>
                         <div class="timezone-badge">{{ weather_data.timezone | timezone_display }}</div>
                     </div>
                 </div>

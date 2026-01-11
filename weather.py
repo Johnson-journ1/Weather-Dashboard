@@ -53,6 +53,7 @@ class WeatherData:
         daily_forecast (list): List of dicts with daily predictions (5-7 days)
         alerts (list): List of active weather alerts/warnings
         timezone (str): Timezone identifier for the location (e.g., "Europe/London")
+        timezone_offset (int): UTC offset in seconds (e.g., 3600 for UTC+1)
         sunrise (int): Unix timestamp of sunrise time
         sunset (int): Unix timestamp of sunset time
         last_updated (int): Unix timestamp when data was last fetched
@@ -72,6 +73,7 @@ class WeatherData:
     daily_forecast: list
     alerts: list
     timezone: str = "UTC"
+    timezone_offset: int = 0
     sunrise: int = 0
     sunset: int = 0
     last_updated: int = 0
@@ -182,6 +184,7 @@ def get_current_weather(lat, lon, api_key):
             daily_forecast=[],  # Will be populated by get_forecast_data()
             alerts=[],  # Will be populated by get_forecast_data()
             timezone=data.get("sys", {}).get("country", "UTC"),  # Country code from API
+            timezone_offset=data.get("timezone", 0),  # UTC offset in seconds from API
             sunrise=data.get("sys", {}).get("sunrise", 0),  # Unix timestamp
             sunset=data.get("sys", {}).get("sunset", 0),  # Unix timestamp
             last_updated=int(datetime.now().timestamp())  # Current time
