@@ -572,6 +572,22 @@
                     </div>
                 </div>
             </div>
+
+            <!-- ========== LOCATION TIME WIDGET ========== -->
+            <!-- Displays the current time at the searched location -->
+            <div class="card mt-5" style="background: linear-gradient(135deg, #00a8a8 0%, #006f6f 100%); color: white; border: none;">
+                <div class="card-body text-center">
+                    <h5 class="card-title" style="color: white; font-size: 14px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px;">⏰ Time at {{ weather_data.name }}</h5>
+                    <div style="font-size: 48px; font-weight: bold; margin-bottom: 10px;">
+                        {{ current_time | format_time(weather_data.timezone_offset) }}
+                    </div>
+                    <div style="font-size: 18px; opacity: 0.9; margin-bottom: 8px;">
+                        {{ current_time | format_date_long(weather_data.timezone_offset) }}
+                    </div>
+                    <small style="opacity: 0.8;">📍 {{ weather_data.timezone | timezone_display }}</small>
+                </div>
+            </div>
+
         {% else %}
             <!-- Display message when no weather data has been fetched yet -->
             <div class="card">
