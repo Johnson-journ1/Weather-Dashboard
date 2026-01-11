@@ -57,6 +57,89 @@ def strftime_filter(timestamp, format_string):
         # Return original timestamp if conversion fails
         return str(timestamp)
 
+
+@app.template_filter('format_time')
+def format_time_filter(timestamp=None):
+    """
+    Format current or provided timestamp as HH:MM with AM/PM.
+    
+    Args:
+        timestamp (int, optional): Unix timestamp. If None, uses current time.
+    
+    Returns:
+        str: Formatted time string (e.g., "2:30 PM")
+    """
+    if timestamp is None:
+        dt = datetime.now()
+    else:
+        dt = datetime.fromtimestamp(timestamp)
+    return dt.strftime('%I:%M %p')
+
+
+@app.template_filter('format_date_long')
+def format_date_long_filter(timestamp=None):
+    """
+    Format current or provided timestamp as full date.
+    
+    Args:
+        timestamp (int, optional): Unix timestamp. If None, uses current time.
+    
+    Returns:
+        str: Formatted date string (e.g., "Saturday, January 11, 2026")
+    """
+    if timestamp is None:
+        dt = datetime.now()
+    else:
+        dt = datetime.fromtimestamp(timestamp)
+    return dt.strftime('%A, %B %d, %Y')
+
+
+@app.template_filter('format_24h')
+def format_24h_filter(timestamp=None):
+    """
+    Format current or provided timestamp in 24-hour format.
+    
+    Args:
+        timestamp (int, optional): Unix timestamp. If None, uses current time.
+    
+    Returns:
+        str: Formatted time string (e.g., "14:30")
+    """
+    if timestamp is None:
+        dt = datetime.now()
+    else:
+        dt = datetime.fromtimestamp(timestamp)
+    return dt.strftime('%H:%M')
+
+
+@app.template_filter('time_ago')
+def time_ago_filter(timestamp):
+    """
+    Calculate how long ago a timestamp was.
+    
+    Args:
+        timestamp (int): Unix timestamp
+    
+    Returns:
+        str: Human-readable time difference (e.g., "5 minutes ago")
+    """
+    dt = datetime.fromtimestamp(timestamp)
+    now = datetime.now()
+    diff = now - dt
+    
+    minutes = diff.total_seconds() / 60
+    if minutes < 1:
+        return "Just now"
+    elif minutes < 60:
+        return f"{int(minutes)} minute{'s' if int(minutes) != 1 else ''} ago"
+    
+    hours = minutes / 60
+    if hours < 24:
+        return f"{int(hours)} hour{'s' if int(hours) != 1 else ''} ago"
+    
+    days = hours / 24
+    return f"{int(days)} day{'s' if int(days) != 1 else ''} ago"
+
 # ============================================================================
 # FLASK ROUTES
 # ============================================================================
@@ -85,6 +168,9 @@ def index():
     Returns:
         Rendered HTML template with weather data (if POST) or empty form (if GET)
     """
+    # Get current timestamp for UI display
+    current_time = datetime.now().timestamp()
+    
     if request.method == "POST":
         # Extract form data from user input
         city_name = request.form["city"]
@@ -97,11 +183,11 @@ def index():
         # Log the retrieved data (for debugging)
         print(weather_data)
         
-        # Render template with weather data
-        return render_template("index.html", weather_data=weather_data)
+        # Render template with weather data and current time
+        return render_template("index.html", weather_data=weather_data, current_time=current_time)
     
-    # GET request: show empty form
-    return render_template("index.html")
+    # GET request: show empty form with current time
+    return render_template("index.html", current_time=current_time)
 
 # ============================================================================
 # APPLICATION ENTRY POINT

@@ -130,6 +130,69 @@
         .uv-high { color: #fd7e14; }      /* Orange - High risk */
         .uv-very-high { color: #dc3545; } /* Red - Very High risk */
         
+        /* Header time display styling */
+        .header-time {
+            color: white;
+            font-size: 14px;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+            margin-bottom: 20px;
+        }
+        
+        .current-time {
+            font-size: 28px;
+            font-weight: bold;
+            color: #00a8a8;
+        }
+        
+        .current-date {
+            font-size: 14px;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 5px;
+        }
+        
+        /* Last updated timestamp */
+        .last-updated {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        /* Time display in weather card */
+        .weather-timestamp {
+            color: #666;
+            font-size: 12px;
+            margin-top: 10px;
+            font-style: italic;
+        }
+        
+        /* 24-hour clock toggle */
+        .time-format-toggle {
+            display: inline-block;
+            margin-top: 10px;
+        }
+        
+        .time-format-btn {
+            background-color: transparent;
+            color: #00a8a8;
+            border: 1px solid #00a8a8;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+        
+        .time-format-btn:hover {
+            background-color: #00a8a8;
+            color: white;
+        }
+        
+        .time-format-btn.active {
+            background-color: #00a8a8;
+            color: white;
+        }
+        
         /* Section titles */
         .section-title {
             color: white;
@@ -186,6 +249,29 @@
     <div class="container py-5">
         <!-- Page header -->
         <h1 class="text-white text-center mb-4">🌤️ Weather Dashboard</h1>
+        
+        <!-- Current time display -->
+        <div class="header-time text-center">
+            <div class="current-time" id="currentTime">
+                {% if current_time %}
+                    {{ current_time | format_time }}
+                {% else %}
+                    --:-- AM
+                {% endif %}
+            </div>
+            <div class="current-date">
+                {% if current_time %}
+                    {{ current_time | format_date_long }}
+                {% else %}
+                    Loading date...
+                {% endif %}
+            </div>
+            <!-- Time format toggle buttons -->
+            <div class="time-format-toggle">
+                <button class="time-format-btn active" onclick="toggleTimeFormat('12h')" id="btn-12h">12-hour</button>
+                <button class="time-format-btn" onclick="toggleTimeFormat('24h')" id="btn-24h">24-hour</button>
+            </div>
+        </div>
         
         <!-- Search Form Section -->
         <div class="card mb-5">
@@ -406,8 +492,65 @@
     <!-- Bootstrap JavaScript Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/js/bootstrap.bundle.min.js" integrity="sha384-5sE5c5F5s5E5c5F5s5E5c5F5s5E5c5F5s5E5c5F5s5E5c5F5s5E5c5F5s5E5c5F5" crossorigin="anonymous"></script>
     
-    <!-- Custom JavaScript for date formatting -->
+    <!-- Custom JavaScript for time and date formatting -->
     <script>
+        // Track current time format (12h or 24h)
+        let currentTimeFormat = '12h';
+        
+        // Update current time every second
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeElement = document.getElementById('currentTime');
+            
+            if (timeElement) {
+                if (currentTimeFormat === '12h') {
+                    // 12-hour format with AM/PM
+                    const hours = now.getHours() % 12 || 12;
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    const ampm = now.getHours() >= 12 ? 'PM' : 'AM';
+                    timeElement.textContent = `${hours}:${minutes} ${ampm}`;
+                } else {
+                    // 24-hour format
+                    const hours = String(now.getHours()).padStart(2, '0');
+                    const minutes = String(now.getMinutes()).padStart(2, '0');
+                    timeElement.textContent = `${hours}:${minutes}`;
+                }
+            }
+        }
+        
+        // Toggle between 12-hour and 24-hour time format
+        function toggleTimeFormat(format) {
+            currentTimeFormat = format;
+            
+            // Update button styles
+            document.getElementById('btn-12h').classList.toggle('active', format === '12h');
+            document.getElementById('btn-24h').classList.toggle('active', format === '24h');
+            
+            // Update the displayed time
+            updateCurrentTime();
+            
+            // Save preference to localStorage
+            localStorage.setItem('timeFormat', format);
+        }
+        
+        // Load saved time format preference
+        function loadTimeFormatPreference() {
+            const saved = localStorage.getItem('timeFormat');
+            if (saved) {
+                currentTimeFormat = saved;
+                document.getElementById('btn-12h').classList.toggle('active', saved === '12h');
+                document.getElementById('btn-24h').classList.toggle('active', saved === '24h');
+            }
+        }
+        
+        // Initialize time display when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            loadTimeFormatPreference();
+            updateCurrentTime();
+            // Update time every second
+            setInterval(updateCurrentTime, 1000);
+        });
+        
         // Add timestamp filter for Jinja2 - converts Unix timestamps to readable dates
         Jinja2.filters.strftime = function(timestamp, format) {
             const date = new Date(timestamp * 1000);
