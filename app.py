@@ -140,6 +140,49 @@ def time_ago_filter(timestamp):
     days = hours / 24
     return f"{int(days)} day{'s' if int(days) != 1 else ''} ago"
 
+
+@app.template_filter('sunrise_sunset')
+def sunrise_sunset_filter(timestamp):
+    """
+    Format sunrise/sunset timestamp as readable time.
+    
+    Args:
+        timestamp (int): Unix timestamp
+    
+    Returns:
+        str: Formatted time (e.g., "6:45 AM")
+    """
+    if timestamp == 0:
+        return "N/A"
+    dt = datetime.fromtimestamp(timestamp)
+    return dt.strftime('%I:%M %p')
+
+
+@app.template_filter('timezone_display')
+def timezone_display_filter(timezone_code):
+    """
+    Convert timezone code to readable timezone name.
+    
+    Args:
+        timezone_code (str): Timezone code (e.g., "GB", "US")
+    
+    Returns:
+        str: Readable timezone display
+    """
+    timezone_map = {
+        'GB': '🇬🇧 GMT/BST (UK)',
+        'US': '🇺🇸 EST/CST/MST/PST (USA)',
+        'CA': '🇨🇦 EST/CST/MST/PST (Canada)',
+        'AU': '🇦🇺 AEST/ACST/AWST (Australia)',
+        'IN': '🇮🇳 IST (India)',
+        'JP': '🇯🇵 JST (Japan)',
+        'FR': '🇫🇷 CET/CEST (France)',
+        'DE': '🇩🇪 CET/CEST (Germany)',
+        'NZ': '🇳🇿 NZST/NZDT (New Zealand)',
+        'SG': '🇸🇬 SGT (Singapore)',
+    }
+    return timezone_map.get(timezone_code, f"Timezone: {timezone_code}")
+
 # ============================================================================
 # FLASK ROUTES
 # ============================================================================

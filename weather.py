@@ -52,6 +52,10 @@ class WeatherData:
         hourly_forecast (list): List of dicts with hourly predictions (24 hours)
         daily_forecast (list): List of dicts with daily predictions (5-7 days)
         alerts (list): List of active weather alerts/warnings
+        timezone (str): Timezone identifier for the location (e.g., "Europe/London")
+        sunrise (int): Unix timestamp of sunrise time
+        sunset (int): Unix timestamp of sunset time
+        last_updated (int): Unix timestamp when data was last fetched
     """
     name: str
     main: str
@@ -67,6 +71,10 @@ class WeatherData:
     hourly_forecast: list
     daily_forecast: list
     alerts: list
+    timezone: str = "UTC"
+    sunrise: int = 0
+    sunset: int = 0
+    last_updated: int = 0
 
 # ============================================================================
 # API FUNCTIONS
@@ -172,7 +180,11 @@ def get_current_weather(lat, lon, api_key):
             uv_index=0,  # Will be populated by get_forecast_data()
             hourly_forecast=[],  # Will be populated by get_forecast_data()
             daily_forecast=[],  # Will be populated by get_forecast_data()
-            alerts=[]  # Will be populated by get_forecast_data()
+            alerts=[],  # Will be populated by get_forecast_data()
+            timezone=data.get("sys", {}).get("country", "UTC"),  # Country code from API
+            sunrise=data.get("sys", {}).get("sunrise", 0),  # Unix timestamp
+            sunset=data.get("sys", {}).get("sunset", 0),  # Unix timestamp
+            last_updated=int(datetime.now().timestamp())  # Current time
         )
         return weather_data
     else:

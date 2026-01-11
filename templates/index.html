@@ -193,6 +193,70 @@
             color: white;
         }
         
+        /* Sunrise/Sunset section */
+        .sunrise-sunset-container {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #00a8a8;
+        }
+        
+        .sunrise-sunset-row {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .sunrise-sunset-item {
+            text-align: center;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .sunrise-sunset-item .label {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        
+        .sunrise-sunset-item .time {
+            font-size: 24px;
+            font-weight: bold;
+            color: #00a8a8;
+        }
+        
+        .sunrise-sunset-item .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        /* Timezone display */
+        .timezone-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #00a8a8 0%, #006f6f 100%);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        
+        /* Last updated badge */
+        .last-updated-badge {
+            background: #e7f3f3;
+            color: #006f6f;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-size: 12px;
+            margin-top: 15px;
+            text-align: center;
+            border: 1px solid #00a8a8;
+        }
+        
         /* Section titles */
         .section-title {
             color: white;
@@ -363,6 +427,35 @@
                             <div class="metric-value">{{ weather_data.pressure }} mb</div>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <!-- ========== SUNRISE/SUNSET SECTION ========== -->
+            <!-- Shows sunrise and sunset times for the location -->
+            <div class="sunrise-sunset-container">
+                <div class="sunrise-sunset-row">
+                    <!-- Sunrise -->
+                    <div class="sunrise-sunset-item">
+                        <div class="icon">🌅</div>
+                        <div class="label">Sunrise</div>
+                        <div class="time">{{ weather_data.sunrise | sunrise_sunset }}</div>
+                    </div>
+                    <!-- Sunset -->
+                    <div class="sunrise-sunset-item">
+                        <div class="icon">🌅</div>
+                        <div class="label">Sunset</div>
+                        <div class="time">{{ weather_data.sunset | sunrise_sunset }}</div>
+                    </div>
+                    <!-- Timezone -->
+                    <div class="sunrise-sunset-item">
+                        <div class="icon">🌍</div>
+                        <div class="label">Location</div>
+                        <div class="timezone-badge">{{ weather_data.timezone | timezone_display }}</div>
+                    </div>
+                </div>
+                <!-- Last updated -->
+                <div class="last-updated-badge">
+                    ⏱️ Last Updated: {{ weather_data.last_updated | time_ago }}
                 </div>
             </div>
 
