@@ -526,57 +526,61 @@
                 </div>
             {% endif %}
 
-            <!-- ========== 24-HOUR FORECAST SECTION ========== -->
-            <!-- Shows hourly weather predictions for the next 24 hours -->
-            <h3 class="section-title">📊 24 Hour Forecast</h3>
+            <!-- ========== FORECAST TOGGLE TABS ========== -->
+            <!-- Users can switch between hourly (24h) and daily (8-day) forecasts -->
             <div class="card mb-4">
                 <div class="card-body">
-                    <div class="row">
-                        <!-- Loop through each hour in the forecast -->
-                        {% for hour in weather_data.hourly_forecast %}
-                            <div class="col-lg-2 col-md-3 col-sm-4 col-6">
-                                <div class="forecast-item">
-                                    <!-- Hour time -->
-                                    <small><strong>{{ hour.time | strftime('%H:%M') }}</strong></small>
-                                    <!-- Weather icon for this hour -->
-                                    <img src="http://openweathermap.org/img/wn/{{ hour.icon }}.png" alt="{{ hour.description }}" class="forecast-icon">
-                                    <!-- Temperature for this hour -->
-                                    <div class="metric-value">{{ "%.0f"|format(hour.temp) }}°C</div>
-                                    <!-- Chance of precipitation -->
-                                    <small class="text-muted">{{ hour.precipitation | int }}% rain</small>
-                                </div>
-                            </div>
-                        {% endfor %}
+                    <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 2px solid #e9ecef; padding-bottom: 15px;">
+                        <button 
+                            class="forecast-tab-btn active" 
+                            onclick="switchForecastTab('hourly')"
+                            id="btn-hourly"
+                            style="padding: 10px 20px; border: none; background: transparent; font-size: 16px; font-weight: bold; color: #00a8a8; cursor: pointer; border-bottom: 3px solid #00a8a8; margin-bottom: -15px;">
+                            📊 24-Hour Forecast
+                        </button>
+                        <button 
+                            class="forecast-tab-btn" 
+                            onclick="switchForecastTab('daily')"
+                            id="btn-daily"
+                            style="padding: 10px 20px; border: none; background: transparent; font-size: 16px; font-weight: bold; color: #999; cursor: pointer; border-bottom: 3px solid transparent; margin-bottom: -15px;">
+                            📅 8-Day Forecast
+                        </button>
                     </div>
-                </div>
-            </div>
 
-            <!-- ========== 5-7 DAY FORECAST SECTION ========== -->
-            <!-- Shows daily weather predictions for the next 5-7 days -->
-            <h3 class="section-title">📅 5 Day Forecast</h3>
-            <div class="card mb-4">
-                <div class="card-body">
-                    <div class="row">
-                        <!-- Loop through each day in the forecast -->
-                        {% for day in weather_data.daily_forecast %}
-                            <div class="col-lg-2 col-md-3 col-sm-4 col-6">
-                                <div class="forecast-item">
-                                    <!-- Day of week and date -->
-                                    <small><strong>{{ day.time | strftime('%a, %b %d') }}</strong></small>
-                                    <!-- Weather icon for this day -->
-                                    <img src="http://openweathermap.org/img/wn/{{ day.icon }}.png" alt="{{ day.description }}" class="forecast-icon">
-                                    <!-- High and Low temperatures -->
-                                    <div style="font-size: 16px; font-weight: bold;">
-                                        <span style="color: #667eea;">{{ "%.0f"|format(day.temp_max) }}°</span> / 
-                                        <span style="color: #999;">{{ "%.0f"|format(day.temp_min) }}°</span>
+                    <!-- Hourly Forecast (24 hours) -->
+                    <div id="hourly-forecast" class="forecast-section" style="display: block;">
+                        <div class="row">
+                            {% for hour in weather_data.hourly_forecast %}
+                                <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                                    <div class="forecast-item">
+                                        <small><strong>{{ hour.time | strftime('%H:%M') }}</strong></small>
+                                        <img src="http://openweathermap.org/img/wn/{{ hour.icon }}.png" alt="{{ hour.description }}" class="forecast-icon">
+                                        <div class="metric-value">{{ "%.0f"|format(hour.temp) }}°C</div>
+                                        <small class="text-muted">{{ hour.precipitation | int }}% rain</small>
                                     </div>
-                                    <!-- Humidity percentage -->
-                                    <small class="text-muted">💧 {{ day.humidity }}%</small><br>
-                                    <!-- Wind speed -->
-                                    <small class="text-muted">💨 {{ "%.1f"|format(day.wind_speed) }} m/s</small>
                                 </div>
-                            </div>
-                        {% endfor %}
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <!-- Daily Forecast (8 days) -->
+                    <div id="daily-forecast" class="forecast-section" style="display: none;">
+                        <div class="row">
+                            {% for day in weather_data.daily_forecast %}
+                                <div class="col-lg-2 col-md-3 col-sm-4 col-6">
+                                    <div class="forecast-item">
+                                        <small><strong>{{ day.time | strftime('%a, %b %d') }}</strong></small>
+                                        <img src="http://openweathermap.org/img/wn/{{ day.icon }}.png" alt="{{ day.description }}" class="forecast-icon">
+                                        <div style="font-size: 16px; font-weight: bold;">
+                                            <span style="color: #667eea;">{{ "%.0f"|format(day.temp_max) }}°</span> / 
+                                            <span style="color: #999;">{{ "%.0f"|format(day.temp_min) }}°</span>
+                                        </div>
+                                        <small class="text-muted">💧 {{ day.humidity }}%</small><br>
+                                        <small class="text-muted">💨 {{ "%.1f"|format(day.wind_speed) }} m/s</small>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -632,6 +636,30 @@
                     const minutes = String(now.getMinutes()).padStart(2, '0');
                     timeElement.textContent = `${hours}:${minutes}`;
                 }
+            }
+        }
+        
+        // Toggle between hourly and daily forecast
+        function switchForecastTab(tab) {
+            const hourlySection = document.getElementById('hourly-forecast');
+            const dailySection = document.getElementById('daily-forecast');
+            const btnHourly = document.getElementById('btn-hourly');
+            const btnDaily = document.getElementById('btn-daily');
+            
+            if (tab === 'hourly') {
+                hourlySection.style.display = 'block';
+                dailySection.style.display = 'none';
+                btnHourly.style.color = '#00a8a8';
+                btnHourly.style.borderBottom = '3px solid #00a8a8';
+                btnDaily.style.color = '#999';
+                btnDaily.style.borderBottom = '3px solid transparent';
+            } else {
+                hourlySection.style.display = 'none';
+                dailySection.style.display = 'block';
+                btnHourly.style.color = '#999';
+                btnHourly.style.borderBottom = '3px solid transparent';
+                btnDaily.style.color = '#00a8a8';
+                btnDaily.style.borderBottom = '3px solid #00a8a8';
             }
         }
         
