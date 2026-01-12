@@ -218,7 +218,7 @@ def get_forecast_data(lat, lon, api_key):
     Returns:
         tuple: (hourly_forecast, daily_forecast, uv_index, alerts)
                - hourly_forecast (list): 8 items × 3 hours = 24-hour forecast
-               - daily_forecast (list): Up to 8 daily forecasts
+               - daily_forecast (list): Up to 5-6 daily forecasts (API limit)
                - uv_index (float): Current UV index value
                - alerts (list): Empty list (alerts not available on free tier)
     """
@@ -310,9 +310,7 @@ def get_forecast_data(lat, lon, api_key):
                 "precipitation": float(max(pops)) if pops else 0
             })
 
-            # limit to 8 days
-            if len(daily_forecast) >= 8:
-                break
+            # No artificial limit - get all available days from API (typically 5-6 days)
 
         # Get UV index (using separate UV API endpoint)
         uv_index = 0
