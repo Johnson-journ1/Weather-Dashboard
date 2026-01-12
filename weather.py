@@ -314,8 +314,13 @@ def get_forecast_data(lat, lon, api_key):
             # No artificial limit - get all available days from API (typically 5-6 days)
 
         # Get UV index (using separate UV API endpoint)
+        # Include current timestamp to get actual current UV, not default noon value
+        # Note: OpenWeatherMap free tier API returns the DAILY MAXIMUM UV index,
+        # not the instantaneous UV at the request time. This is by design to show
+        # users the worst-case UV exposure they should prepare for during the day.
         uv_index = 0
-        uv_url = f"https://api.openweathermap.org/data/2.5/uvi?lat={lat}&lon={lon}&appid={api_key}"
+        current_timestamp = int(datetime.now().timestamp())
+        uv_url = f"https://api.openweathermap.org/data/2.5/uvi?lat={lat}&lon={lon}&dt={current_timestamp}&appid={api_key}"
         uv_response = requests.get(uv_url)
         if uv_response.status_code == 200:
             uv_index = uv_response.json().get("value", 0)
