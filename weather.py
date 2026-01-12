@@ -372,6 +372,12 @@ def main(city_name, state_name="", country_code=""):
             weather_datas.alerts = alerts
         
         return weather_datas
+    else:
+        # Geocoding failed - city/location not found
+        print(f"❌ Error: Could not find coordinates for '{city_name}'")
+        if state_name:
+            print(f"   Hint: Try without state code '{state_name}'")
+        return None
 
 if __name__ == "__main__":
     """
