@@ -201,20 +201,20 @@ def get_current_weather(lat, lon, api_key):
 def get_forecast_data(lat, lon, api_key):
     """
     Fetch hourly and daily forecast data using the 5-Day Forecast API.
-    
+
     Uses OpenWeatherMap's 5-day/3-hour forecast API (available on free tier)
     to retrieve weather predictions. Also fetches UV index from a separate
     endpoint.
-    
+
     API Endpoints:
         - /data/2.5/forecast (5-day forecast with 3-hour intervals)
         - /data/2.5/uvi (UV index)
-    
+
     Args:
         lat (float): Latitude coordinate
         lon (float): Longitude coordinate
         api_key (str): OpenWeatherMap API key
-    
+
     Returns:
         tuple: (hourly_forecast, daily_forecast, uv_index, alerts)
                - hourly_forecast (list): 8 items × 3 hours = 24-hour forecast
@@ -225,10 +225,13 @@ def get_forecast_data(lat, lon, api_key):
     # Use the 5-day/3-hour forecast API which is available on free tier
     url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric"
     response = requests.get(url)
-    
+
     if response.status_code == 200:
         data = response.json()
-        
+
+        # Extract city timezone offset (seconds) if available
+        timezone_offset = data.get('city', {}).get('timezone', 0)
+
         # Get hourly forecast (next 24 hours - every 3 hours from API)
         hourly_forecast = []
         for i, item in enumerate(data.get("list", [])):
@@ -241,36 +244,83 @@ def get_forecast_data(lat, lon, api_key):
                 "description": item["weather"][0].get("description"),
                 "precipitation": item.get("pop", 0) * 100
             })
-        
-        # Get daily forecast (next 7 days - one entry per day)
+
+        # Build daily forecast by aggregating 3-hour entries into calendar days
+        from collections import defaultdict
+        daily_buckets = defaultdict(list)
+
+        for item in data.get('list', []):
+            ts = item.get('dt')
+            # Convert to location-local date using timezone offset
+            local_dt = datetime.utcfromtimestamp(ts) + timedelta(seconds=timezone_offset)
+            local_date = local_dt.date()
+            daily_buckets[local_date].append((local_dt, item))
+
+        # For each day, compute sensible aggregates
         daily_forecast = []
-        processed_days = set()
-        
-        for item in data.get("list", []):
-            timestamp = item.get("dt")
-            date = datetime.fromtimestamp(timestamp).date()
-            
-            # Only process each day once, and limit to 7 days
-            if date not in processed_days and len(daily_forecast) < 7:
-                processed_days.add(date)
-                daily_forecast.append({
-                    "time": timestamp,
-                    "temp_max": item.get("main", {}).get("temp_max"),
-                    "temp_min": item.get("main", {}).get("temp_min"),
-                    "icon": item["weather"][0].get("icon"),
-                    "description": item["weather"][0].get("description"),
-                    "humidity": item.get("main", {}).get("humidity"),
-                    "wind_speed": item.get("wind", {}).get("speed", 0),
-                    "precipitation": item.get("pop", 0) * 100
-                })
-        
+        for local_date in sorted(daily_buckets.keys()):
+            entries = daily_buckets[local_date]
+            temps = []
+            pops = []
+            humidities = []
+            wind_speeds = []
+            # pick a representative entry (closest to local noon if possible)
+            rep_entry = None
+            rep_dt = None
+            best_noon_diff = None
+
+            for local_dt, item in entries:
+                main = item.get('main', {})
+                # Collect all temperatures throughout the day
+                temps.append(main.get('temp', 0))
+                pops.append(item.get('pop', 0) * 100)
+                humidities.append(main.get('humidity', 0))
+                wind_speeds.append(item.get('wind', {}).get('speed', 0))
+
+                # prefer entry at 12:00 local time
+                noon = local_dt.replace(hour=12, minute=0, second=0, microsecond=0)
+                diff = abs((local_dt - noon).total_seconds())
+                if best_noon_diff is None or diff < best_noon_diff:
+                    best_noon_diff = diff
+                    rep_entry = item
+                    rep_dt = local_dt
+
+            # Fallback to first entry if none selected
+            if rep_entry is None:
+                rep_dt, rep_entry = entries[0]
+
+            # Build daily summary
+            try:
+                temp_max_val = max([t for t in temps if t is not None])
+            except ValueError:
+                temp_max_val = None
+            try:
+                temp_min_val = min([t for t in temps if t is not None])
+            except ValueError:
+                temp_min_val = None
+
+            daily_forecast.append({
+                "time": int(rep_dt.timestamp()),
+                "temp_max": temp_max_val,
+                "temp_min": temp_min_val,
+                "icon": rep_entry["weather"][0].get("icon"),
+                "description": rep_entry["weather"][0].get("description"),
+                "humidity": int(sum(humidities)/len(humidities)) if humidities else None,
+                "wind_speed": float(max(wind_speeds)) if wind_speeds else 0,
+                "precipitation": float(max(pops)) if pops else 0
+            })
+
+            # limit to 7 days
+            if len(daily_forecast) >= 7:
+                break
+
         # Get UV index (using separate UV API endpoint)
         uv_index = 0
         uv_url = f"https://api.openweathermap.org/data/2.5/uvi?lat={lat}&lon={lon}&appid={api_key}"
         uv_response = requests.get(uv_url)
         if uv_response.status_code == 200:
             uv_index = uv_response.json().get("value", 0)
-        
+
         return hourly_forecast, daily_forecast, uv_index, []
     else:
         return [], [], 0, []
