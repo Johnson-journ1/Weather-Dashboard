@@ -556,7 +556,8 @@
                                         <small><strong>{{ hour.time | strftime('%H:%M') }}</strong></small>
                                         <img src="http://openweathermap.org/img/wn/{{ hour.icon }}.png" alt="{{ hour.description }}" class="forecast-icon">
                                         <div class="metric-value">{{ "%.0f"|format(hour.temp) }}°C</div>
-                                        <small class="text-muted">{{ hour.precipitation | int }}% rain</small>
+                                        <small class="text-muted">🌧️ {{ hour.precipitation | int }}% rain</small><br>
+                                        <small class="text-muted">💧 {{ hour.humidity }}% humid</small>
                                     </div>
                                 </div>
                             {% endfor %}
@@ -575,7 +576,7 @@
                                             <span style="color: #667eea;">{{ "%.0f"|format(day.temp_max) }}°</span> / 
                                             <span style="color: #999;">{{ "%.0f"|format(day.temp_min) }}°</span>
                                         </div>
-                                        <small class="text-muted">💧 {{ day.humidity }}%</small><br>
+                                        <small class="text-muted">🌧️ {{ day.precipitation | int }}% rain</small><br>
                                         <small class="text-muted">💨 {{ "%.1f"|format(day.wind_speed) }} m/s</small>
                                     </div>
                                 </div>

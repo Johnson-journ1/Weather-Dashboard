@@ -242,7 +242,8 @@ def get_forecast_data(lat, lon, api_key):
                 "temp": item.get("main", {}).get("temp"),
                 "icon": item["weather"][0].get("icon"),
                 "description": item["weather"][0].get("description"),
-                "precipitation": item.get("pop", 0) * 100
+                "precipitation": item.get("pop", 0) * 100,
+                "humidity": item.get("main", {}).get("humidity", 0)
             })
 
         # Build daily forecast by aggregating 3-hour entries into calendar days
