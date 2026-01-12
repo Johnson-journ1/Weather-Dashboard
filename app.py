@@ -284,5 +284,7 @@ def index():
 
 if __name__ == "__main__":
     # Start Flask development server
-    # debug=True enables auto-reload and detailed error pages
-    app.run(debug=True)
+    # For production, use a WSGI server like gunicorn
+    import os
+    debug_mode = os.getenv("FLASK_ENV") == "development"
+    app.run(debug=debug_mode, host="0.0.0.0", port=int(os.getenv("PORT", 5000)))
