@@ -19,7 +19,7 @@ import requests
 from dotenv import load_dotenv
 import os
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timezone, timedelta
 
 # Load environment variables from .env file
 load_dotenv()
@@ -253,7 +253,8 @@ def get_forecast_data(lat, lon, api_key):
         for item in data.get('list', []):
             ts = item.get('dt')
             # Convert to location-local date using timezone offset
-            local_dt = datetime.utcfromtimestamp(ts) + timedelta(seconds=timezone_offset)
+            utc_dt = datetime.fromtimestamp(ts, tz=timezone.utc).replace(tzinfo=None)
+            local_dt = utc_dt + timedelta(seconds=timezone_offset)
             local_date = local_dt.date()
             daily_buckets[local_date].append((local_dt, item))
 

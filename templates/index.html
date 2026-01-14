@@ -519,8 +519,8 @@
                                 <h5>{{ alert.event }}</h5>
                                 <p>{{ alert.description }}</p>
                                 <small class="text-muted">
-                                    From: {{ alert.start | strftime('%Y-%m-%d %H:%M') }} | 
-                                    To: {{ alert.end | strftime('%Y-%m-%d %H:%M') }}
+                                    From: {{ alert.start | strftime('%Y-%m-%d %H:%M', weather_data.timezone_offset) }} | 
+                                    To: {{ alert.end | strftime('%Y-%m-%d %H:%M', weather_data.timezone_offset) }}
                                 </small>
                             </div>
                         {% endfor %}
@@ -555,7 +555,7 @@
                             {% for hour in weather_data.hourly_forecast %}
                                 <div class="col-lg-2 col-md-3 col-sm-4 col-6">
                                     <div class="forecast-item">
-                                        <small><strong>{{ hour.time | strftime('%H:%M') }}</strong></small>
+                                        <small><strong>{{ hour.time | strftime('%H:%M', weather_data.timezone_offset) }}</strong></small>
                                         <img src="http://openweathermap.org/img/wn/{{ hour.icon }}.png" alt="{{ hour.description }}" class="forecast-icon">
                                         <div class="metric-value">{{ "%.0f"|format(hour.temp) }}°C</div>
                                         <small class="text-muted">🌧️ {{ hour.precipitation | int }}% rain</small><br>
@@ -572,7 +572,7 @@
                             {% for day in weather_data.daily_forecast %}
                                 <div class="col-lg-2 col-md-3 col-sm-4 col-6">
                                     <div class="forecast-item">
-                                        <small><strong>{{ day.time | strftime('%a, %b %d') }}</strong></small>
+                                        <small><strong>{{ day.time | strftime('%a, %b %d', weather_data.timezone_offset) }}</strong></small>
                                         <img src="http://openweathermap.org/img/wn/{{ day.icon }}.png" alt="{{ day.description }}" class="forecast-icon">
                                         <div style="font-size: 16px; font-weight: bold;">
                                             <span style="color: #667eea;">{{ "%.0f"|format(day.temp_max) }}°</span> / 

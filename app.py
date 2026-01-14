@@ -20,7 +20,7 @@ app = Flask(__name__)
 # ============================================================================
 
 @app.template_filter('strftime')
-def strftime_filter(timestamp, format_string):
+def strftime_filter(timestamp, format_string, timezone_offset=None):
     """
     Convert Unix timestamp to formatted date string.
     
@@ -33,6 +33,8 @@ def strftime_filter(timestamp, format_string):
                            - '%a, %b %d' for "Mon, Jan 01"
                            - '%H:%M' for "14:30"
                            - '%Y-%m-%d %H:%M' for "2026-01-11 14:30"
+        timezone_offset (int, optional): UTC offset in seconds. If provided,
+                                       calculates time based on this offset.
     
     Returns:
         str: Formatted date/time string
@@ -42,7 +44,10 @@ def strftime_filter(timestamp, format_string):
     """
     try:
         # Convert Unix timestamp to datetime object
-        dt = datetime.fromtimestamp(timestamp)
+        if timezone_offset is not None:
+            dt = datetime.utcfromtimestamp(timestamp) + timedelta(seconds=timezone_offset)
+        else:
+            dt = datetime.fromtimestamp(timestamp)
         
         # Map custom format strings to Python strftime format codes
         format_map = {
