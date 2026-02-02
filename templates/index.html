@@ -309,6 +309,16 @@
     </style>
 </head>
 <body>
+    <!-- Share Button -->
+    <div style="position: absolute; top: 20px; right: 20px;">
+        <button id="shareButton" class="btn btn-primary" style="background-color: #00a8a8; border-color: #00a8a8;">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-share" viewBox="0 0 16 16" onclick="openSharePopup()">
+                <path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/>
+                <path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/>
+            </svg>
+            Share
+        </button>
+    </div>
     <!-- Main container with padding -->
     <div class="container py-5">
         <!-- Page header -->
@@ -551,6 +561,11 @@
 
                     <!-- Hourly Forecast (24 hours) -->
                     <div id="hourly-forecast" class="forecast-section" style="display: block;">
+                        {% if plot_path %}
+                        <div class="text-center mb-4">
+                            <img src="{{ url_for('static', filename='forecast_plot.png') }}" alt="Hourly Forecast Plot" class="img-fluid">
+                        </div>
+                        {% endif %}
                         <div class="row">
                             {% for hour in weather_data.hourly_forecast %}
                                 <div class="col-lg-2 col-md-3 col-sm-4 col-6">
@@ -697,6 +712,31 @@
             updateCurrentTime();
             // Update time every second
             setInterval(updateCurrentTime, 1000);
+
+            const shareButton = document.getElementById('shareButton');
+            if (shareButton) {
+                shareButton.addEventListener('click', () => {
+                    let report; // Declare report here
+                    if (weather_data){
+                        report = `Current weather in ${ weather_data.name }: ${ weather_data.temperature }°C, ${ weather_data.description }. Check out the full forecast:`;
+                    }else{
+                        report = 'Check out the weather forecast!';
+                    }
+                    
+                    if (navigator.share) {
+                        navigator.share({
+                            title: 'Weather Dashboard',
+                            text: report,
+                            url: window.location.href
+                                }) 
+                        .then(() => console.log('Successful share'))
+                        .catch((error) => console.log('Error sharing', error));
+                        
+                    } else {
+                        alert('Share functionality is not supported in your browser.');
+                    }
+                });
+            }
         });
         
         // Add timestamp filter for Jinja2 - converts Unix timestamps to readable dates
@@ -713,5 +753,60 @@
             return date.toLocaleDateString('en-US', options);
         };
     </script>
+    <!-- Add this to your index.html inside the <body> or <head> -->
+        <!-- Add this to your index.html inside the <body> or <head> -->
+    <script>
+    function openSharePopup() {
+        const destination = prompt("Where should we send the report? (Enter Email)");
+        if (destination) {
+            
+            let city = "Unknown Location";
+            let temp = "N/A";
+            let description = "N/A";
+
+            if (weather_data){
+                city = (weather_data.name | tojson)
+                temp = (weather_data.temperature | tojson)
+                description = (weather_data.description | tojson)
+            }
+            
+            const shareText = `Weather in ${city}: ${temp}°C, ${description}. Check it out at ${window.location.href}`;
+
+            // Option to copy to clipboard
+            if (confirm("Copy report info to clipboard as well?")) {
+                navigator.clipboard.writeText(shareText);
+                alert("Report info copied to clipboard!");
+            }
+
+            // Send to backend
+            fetch('/share', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ 
+                    destination: destination,
+                    type: 'email',
+                    city: city,
+                    temp: temp,
+                    description: description
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                alert(data.message);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+                alert("Failed to share report.");
+            });
+        }
+    }
+
+    // Make sure your share button calls this function:
+    // <button onclick="openSharePopup()">Share Report</button>
+    </script>
+
+   
 </body>
 </html>

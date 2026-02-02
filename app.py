@@ -8,12 +8,75 @@ Author: Weather Dashboard Team
 Date: January 2026
 """
 
-from flask import Flask, render_template, request
-from weather import main as get_weather_data
+
+from dataclasses import asdict
+import os
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
+from weather import main as get_weather_data
+from flask import Flask, render_template, request, jsonify
 
 # Initialize Flask application
 app = Flask(__name__)
+
+def generate_plot(hourly_data, timezone_offset):
+    """
+    Generates a plot of temperature vs. time from hourly forecast data.
+
+    Args:
+        hourly_data (list): A list of dictionaries, where each dictionary represents an hourly forecast.
+        timezone_offset (int): The timezone offset in seconds.
+
+    Returns:
+        str: The path to the generated plot image.
+    """
+    if not hourly_data:
+        return None
+
+    # Extract time and temperature data
+    times = [datetime.utcfromtimestamp(hour['time']) + timedelta(seconds=timezone_offset) for hour in hourly_data]
+    temperatures = [hour['temp'] for hour in hourly_data]
+
+    # Create the plot
+    plt.style.use('dark_background')  # Use a dark theme for the plot
+    fig, ax = plt.subplots(figsize=(10, 5))
+    
+    ax.plot(times, temperatures, marker='o', linestyle='-', color='#00a8a8', label='Temperature (°C)')
+
+    # Annotate each data point with its temperature
+    for i, temp in enumerate(temperatures):
+        ax.annotate(f"{temp:.1f}°C", (times[i], temperatures[i]), 
+                    textcoords="offset points", xytext=(0,10), ha='center', color='black', fontsize=9)
+
+    # Formatting the plot
+    ax.set_title('Hourly Temperature Forecast (°C)', color='black', fontsize=16)
+    ax.set_xlabel('Time (24-hour format)', color='black', fontsize=12)
+    ax.set_ylabel('Temperature (°C)', color='black', fontsize=12)
+    ax.legend()
+    
+    ax.grid(True, which='both', linestyle='--', linewidth=0.5, color='gray')
+    ax.tick_params(axis='x', colors='black')
+    ax.tick_params(axis='y', colors='black')
+
+    plt.setp(ax.spines.values(), color='black')
+    
+    # Improve date formatting on the x-axis
+    import matplotlib.dates as mdates
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M'))
+    fig.autofmt_xdate()
+
+    # Create static directory if it doesn't exist
+    if not os.path.exists('static'):
+        os.makedirs('static')
+
+    # Save the plot
+    plot_path = 'static/forecast_plot.png'
+    plt.savefig(plot_path, bbox_inches='tight', transparent=True)
+    plt.close()
+    
+    return plot_path
 
 # ============================================================================
 # CUSTOM JINJA2 FILTERS
@@ -259,6 +322,7 @@ def index():
     """
     # Get current timestamp for UI display
     current_time = datetime.now().timestamp()
+    plot_path = None
     
     if request.method == "POST":
         # Extract form data from user input
@@ -277,11 +341,41 @@ def index():
             # Return form with error message if API call failed
             return render_template("index.html", current_time=current_time, timezone_offset=0, error="Could not fetch weather data. Please check the city name and try again.")
         
+        # Generate plot if weather data is available
+        if weather_data and weather_data.hourly_forecast:
+            plot_path = generate_plot(weather_data.hourly_forecast, weather_data.timezone_offset)
+        
         # Render template with weather data and current time (adjusted to location timezone)
-        return render_template("index.html", weather_data=weather_data, current_time=current_time, timezone_offset=weather_data.timezone_offset)
+        return render_template("index.html", weather_data=asdict(weather_data), current_time=current_time, timezone_offset=weather_data.timezone_offset, plot_path=plot_path)
     
     # GET request: show empty form with current time
     return render_template("index.html", current_time=current_time, timezone_offset=0)
+
+@app.route("/share", methods=["POST"])
+def share_report():
+    """
+    Handle share report requests.
+    """
+    data = request.get_json(silent=True)
+    if data is None:
+        data = request.form
+
+    destination = data.get('destination')
+    report_type = data.get('type', 'email')
+    
+    # Extract weather details to include in the shared message
+    city = data.get('city', 'Unknown Location')
+    temp = data.get('temp', 'N/A')
+    description = data.get('description', 'N/A')
+    
+    share_content = f"Weather in {city}: {temp}°C, {description}. Check it out at {request.url_root}"
+    
+    # In a real application, you would implement the email sending logic here.
+    # For now, we simulate a successful share.
+    print(f"Sharing report to {destination} via {report_type}")
+    print(f"Message: {share_content}")
+    
+    return jsonify({"success": True, "message": "Report shared successfully"})
 
 # ============================================================================
 # APPLICATION ENTRY POINT
